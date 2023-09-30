@@ -55,24 +55,13 @@ export default async ({ req, res, log, error }) => {
     try {
         entry = await database.getDocument(APP_DATABASE, APP_COLLECTION, uid);
     } catch (err) {
-        // If the document is not found, initialize 'entry' to null
-        if (err.message === "Document with the requested ID could not be found.") {
-            entry = null;
-        } else {
-            // For other errors, log and return an error response
-            error(`Failed to fetch document: ${err.message}`);
-            return res.send("Error fetching data", 500);
-        }
-    }
-
-    // If the entry doesn't exist, create a new one
-    if (!entry) {
-      await database.createDocument(APP_DATABASE, APP_COLLECTION, uid, {
-        ip: ipAddress.toString(),
-        count: 0,
-        timestamp: Date.now().toString(),
-      });
-      entry = { count: 1 };
+       
+            entry = await database.createDocument(APP_DATABASE, APP_COLLECTION, uid, {
+                ip: ipAddress.toString(),
+                count: 0,
+                timestamp: Date.now().toString(),
+            });
+        
     }
 
     // Rate limit check - if request count for the IP address is 3 or more, return an error
