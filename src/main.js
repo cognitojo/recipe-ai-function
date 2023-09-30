@@ -69,10 +69,10 @@ export default async ({ req, res, log, error }) => {
     if (!entry) {
       await database.createDocument(APP_DATABASE, APP_COLLECTION, uid, {
         ip: ipAddress.toString(),
-        count: 1,
+        count: 0,
         timestamp: Date.now().toString(),
       });
-      entry = { count: 1 };
+      entry = { count: 0 };
     }
 
     // Rate limit check - if request count for the IP address is 3 or more, return an error
