@@ -72,7 +72,7 @@ export default async ({ req, res, log, error }) => {
         count: 0,
         timestamp: Date.now().toString(),
       });
-      entry = { count: 0 };
+      entry = { count: 1 };
     }
 
     // Rate limit check - if request count for the IP address is 3 or more, return an error
