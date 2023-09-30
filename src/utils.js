@@ -12,7 +12,7 @@ export function generateEmailTemplate(recipeJSON) {
       .join('');
   
     const instructionsList = recipe.instructions
-      .map((instruction) => `<li>${instruction}</li>`)
+      .map((instruction) => `<ol>${instruction}</ol>`)
       .join('');
   
     return `
