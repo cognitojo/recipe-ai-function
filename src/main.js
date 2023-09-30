@@ -2,7 +2,10 @@
 import { Client, Databases } from "node-appwrite";
 import { createTransport } from "nodemailer";
 import OpenAI from "openai";
-import { convertIpToUID, generateEmailTemplate } from "/usr/local/server/src/function/src/utils.js";
+import {
+  convertIpToUID,
+  generateEmailTemplate,
+} from "/usr/local/server/src/function/src/utils.js";
 
 // Destructure environment variables for easy access
 const {
@@ -38,7 +41,7 @@ export default async ({ req, res, log, error }) => {
   // Initialize the Appwrite database and OpenAI client
   const database = new Databases(client);
   const openai = new OpenAI({ apiKey: OPENAI_API_KEY });
-  
+
   // Extract required data from the request body
   const { ipAddress, email, prompts } = req.body;
 
@@ -47,7 +50,20 @@ export default async ({ req, res, log, error }) => {
     const uid = convertIpToUID(ipAddress);
 
     // Fetch the document (if exists) from the database using the unique ID
-    let entry = await database.getDocument(APP_DATABASE, APP_COLLECTION, uid);
+    let entry;
+
+    try {
+        entry = await database.getDocument(APP_DATABASE, APP_COLLECTION, uid);
+    } catch (err) {
+        // If the document is not found, initialize 'entry' to null
+        if (err.message === "Document with the requested ID could not be found.") {
+            entry = null;
+        } else {
+            // For other errors, log and return an error response
+            error(`Failed to fetch document: ${err.message}`);
+            return res.send("Error fetching data", 500);
+        }
+    }
 
     // If the entry doesn't exist, create a new one
     if (!entry) {
@@ -67,10 +83,12 @@ export default async ({ req, res, log, error }) => {
     // Interact with OpenAI API to generate a recipe based on the provided ingredients
     const response = await openai.chat.completions.create({
       model: "gpt-3.5-turbo",
-      messages: [{
-        role: "system",
-        content: `You are a helpful assistant that generates recipes. Only answer with receipe and detailed instructions and nothing else.  I have the following ingredients ${prompts}. Return as json in the following format: name, ingredients, instructions`,
-      }],
+      messages: [
+        {
+          role: "system",
+          content: `You are a helpful assistant that generates recipes. Only answer with receipe and detailed instructions and nothing else.  I have the following ingredients ${prompts}. Return as json in the following format: name, ingredients, instructions`,
+        },
+      ],
       temperature: 1,
       max_tokens: 500,
       top_p: 1,
